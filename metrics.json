@@ -1,6 +1,0 @@
-{
-  "attack_auc_lr": 0.5058924609375,
-  "attack_auc_rf": 0.50410552734375,
-  "attack_val_auc_lr": 0.5121890312499999,
-  "attack_val_auc_rf": 0.50408021484375
-}
