@@ -40,7 +40,7 @@ generalised well without measurably leaking which records it was trained on. The
 project's release-gate standard, set jointly with the sponsor, was target AUC ≥ 0.85
 and attack AUC < 0.55.
 
-![Confusion Matrix]
+[Confusion Matrix]
 <img width="600" height="500" alt="image" src="https://github.com/user-attachments/assets/0b6b31fd-e75e-41ab-a126-0e254e8b10cc" />
 
 
