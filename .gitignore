@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+.DS_Store
+
+# Raw or local data
+Datasets/
+data/
+*.parquet
+
+# Experiment trackers and logs
+mlruns/
+wandb/
+logs/
