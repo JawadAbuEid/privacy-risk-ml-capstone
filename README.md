@@ -1,13 +1,42 @@
 # Privacy Risk Assessment for Record Linkage Models via Membership Inference Attacks
 
-**COMP3850 PACE Capstone Project — Data Science & Cybersecurity**  
-Macquarie University · Group 61 · 2025
+**COMP3850 PACE Capstone Project — Macquarie University**  
+**Six-person team project | Machine Learning · Privacy · NLP**
 
 ## Project Overview
 
-Machine-learning systems trained on sensitive data can leak information about the records used during training. This capstone investigates that risk in a privacy-preserving record-linkage setting by testing whether an attacker can infer if a specific record was part of a model's training data.
+### Context
+Machine-learning systems trained on sensitive data can unintentionally reveal information about the records used during training. In privacy-sensitive record linkage, strong predictive performance is only part of the problem: the model should also be evaluated for potential privacy leakage.
 
-The project combines **record linkage**, **deep learning**, and **membership inference attacks (MIA)** to evaluate both predictive utility and privacy resilience.
+This capstone investigated whether an attacker could infer if a particular record had been part of a record-linkage model's training data using **Membership Inference Attacks (MIA)**.
+
+### Actions
+As part of a six-person PACE team, my work focused on the **machine-learning and evaluation components**. I worked with a teammate to fix and validate the core MVP notebook pipeline, including model-training and evaluation cells, reviewed experiment outputs, contributed to the membership-inference attack design, and helped document and interpret the final model-evaluation results.
+
+The project used:
+- paired **768-dimensional BERT embeddings**
+- Siamese representation learning with a **768 → 256 → 50** encoder
+- a calibrated Logistic Regression linkage head
+- a raw-difference MLP comparison model
+- **5 shadow models** for membership-inference evaluation
+- Logistic Regression and Random Forest attack classifiers
+- ROC-AUC, accuracy, F1, confusion matrices and classification reports
+
+### Results
+| Evaluation | Result |
+|---|---:|
+| Target model ROC-AUC | **0.89** |
+| Target model accuracy | **87.3%** |
+| Target model F1 | **0.87** |
+| Logistic Regression attack AUC | **0.5059** |
+| Random Forest attack AUC | **0.5041** |
+
+The target model showed strong record-linkage performance, while the tested membership-inference classifiers performed close to random guessing. This is a **narrow result for the tested configuration**, not evidence that the model is immune to all privacy attacks.
+
+### Growth & Next Steps
+The next stage would be to test whether the result holds under stronger attack settings, additional datasets and different model architectures. Useful extensions include differential privacy, broader privacy/utility comparisons, automated experiment tracking and a reproducible cloud evaluation pipeline.
+
+---
 
 ## Problem Statement
 
@@ -16,18 +45,6 @@ The project combines **record linkage**, **deep learning**, and **membership inf
 The system was evaluated in a controlled research setting using synthetic/de-identified data and pre-computed embeddings only.
 
 ## Technical Approach
-
-### Target model
-
-A **Siamese Autoencoder** was used to compare paired 768-dimensional BERT embeddings. The encoder compressed each embedding from **768 → 256 → 50 dimensions**, with a calibrated logistic-regression head used for the linkage decision. A raw-difference **MLP classifier** was also evaluated as a comparison model.
-
-### Shadow-model attack pipeline
-
-1. Train shadow models on held-out partitions to approximate the target model's behaviour.
-2. Collect member and non-member outputs.
-3. Derive attack features such as confidence, entropy, margins and posterior probabilities.
-4. Train Logistic Regression and Random Forest attack classifiers.
-5. Compare attack performance with random guessing using ROC-AUC and classification metrics.
 
 ```text
 Paired BERT embeddings
@@ -47,26 +64,21 @@ Membership-inference classifiers
 Privacy evaluation
 ```
 
-## Evaluation
+### Target Model
+A **Siamese Autoencoder** was used to compare paired 768-dimensional BERT embeddings. The encoder compressed each embedding from **768 → 256 → 50 dimensions**, with a calibrated logistic-regression head used for the linkage decision. A raw-difference **MLP classifier** was also evaluated as a comparison model.
 
-The project measured both **utility** and **privacy**.
+### Membership-Inference Pipeline
+1. Train shadow models on held-out partitions to approximate the target model's behaviour.
+2. Collect member and non-member outputs.
+3. Derive attack features such as confidence, entropy, margins and posterior probabilities.
+4. Train Logistic Regression and Random Forest attack classifiers.
+5. Compare attack performance with random guessing using ROC-AUC and classification metrics.
 
-| Metric | Target Model | Membership-Inference Attack |
-|---|---:|---:|
-| ROC-AUC | 0.89 | ~0.50 |
-| Accuracy | 87.3% | 51.1% |
-| F1 Score | 0.87 | ~0.50 |
+## Evaluation Details
 
-The saved attack metrics are close to random guessing:
+The project measured both **utility** and **privacy**. It used a privacy release gate of **target AUC ≥ 0.85** and **attack AUC < 0.55**.
 
-- Logistic Regression attack AUC: **0.5059**
-- Random Forest attack AUC: **0.5041**
-
-Under this experiment configuration, the evaluated attacks did not show measurable membership leakage while the linkage model maintained strong predictive performance. This is a narrow experimental result, not a claim that the model is immune to all privacy attacks.
-
-The project used a privacy release gate of **target AUC ≥ 0.85** and **attack AUC < 0.55**.
-
-### Raw-difference MLP result
+### Raw-Difference MLP
 
 ![Confusion matrix](results/confusion_matrix.png)
 
@@ -77,29 +89,17 @@ The held-out raw-difference MLP achieved approximately **82% accuracy** on the l
 ```text
 privacy-risk-ml-capstone/
 ├── README.md
-├── .gitignore
 ├── requirements.txt
 ├── notebooks/
 │   └── privacy_risk_mia_pipeline.ipynb
 ├── models/
 │   ├── README.md
-│   ├── snn_classifier_model.keras
-│   ├── mlp_raw_diff_classifier.keras
-│   ├── target_encoder.keras
-│   ├── target_head.joblib
-│   ├── shadow_encoder.keras
-│   ├── shadow_head.joblib
-│   ├── attack_lr.joblib
-│   └── attack_scaler.joblib
+│   └── saved model artifacts
 └── results/
     ├── README.md
     ├── confusion_matrix.png
-    ├── final_test_predictions_raw_mlp.csv
     ├── metrics.json
-    ├── attack_per_record.csv
-    ├── attack_per_record_on_target.csv
-    ├── p_trg_in.npy
-    └── p_trg_out.npy
+    └── evaluation outputs
 ```
 
 ## Tech Stack
@@ -108,7 +108,7 @@ privacy-risk-ml-capstone/
 
 Models and methods include Siamese neural networks, autoencoders, MLPs, calibrated Logistic Regression, Random Forests and shadow-model membership-inference attacks.
 
-## Environment Setup
+## Run Locally
 
 ```bash
 python -m venv .venv
@@ -118,20 +118,14 @@ pip install -r requirements.txt
 jupyter notebook
 ```
 
-The repository intentionally excludes the original source dataset, so full retraining requires access to the same approved data/embeddings used in the university project. The notebook and saved artifacts are included to document the complete modelling and evaluation workflow.
-
-## My Contribution
-
-This was a six-person PACE capstone project spanning the Data Science and Cybersecurity streams.
-
-My work focused on the **machine-learning and evaluation components**. I worked with a teammate to fix and validate the core MVP notebook pipeline, including model-training and evaluation cells, reviewed experiment outputs, contributed to the membership-inference attack design, and helped document and interpret the final model-evaluation results.
+The repository intentionally excludes the original source dataset, so full retraining requires access to the same approved data/embeddings used in the university project. The notebook and saved artifacts document the modelling and evaluation workflow.
 
 ## Key Takeaways
 
 - Model utility and privacy risk should be evaluated together.
 - Shadow-model attacks provide a practical framework for testing membership leakage.
 - Privacy results should be interpreted within the tested attack configuration rather than generalised too broadly.
-- Reproducible ML work benefits from clear environment dependencies, saved artifacts and documented evaluation outputs.
+- Reproducible ML work benefits from clear dependencies, saved artifacts and documented evaluation outputs.
 - Privacy testing belongs in the ML evaluation lifecycle, not as an afterthought.
 
 ## Limitations
@@ -140,14 +134,6 @@ My work focused on the **machine-learning and evaluation components**. I worked 
 - Results apply only to the tested architecture, splits and attack configuration.
 - Attack AUC near 0.50 does not prove immunity to stronger or different privacy attacks.
 - The public repository cannot reproduce full training without the original approved dataset.
-
-## Future Improvements
-
-- evaluate stronger and more diverse membership-inference attacks
-- test differential privacy and additional regularisation strategies
-- add automated experiment tracking with MLflow or Azure Machine Learning
-- build a reproducible cloud-based evaluation pipeline
-- compare privacy/utility trade-offs across additional model families
 
 ## Ethics & Data Handling
 
